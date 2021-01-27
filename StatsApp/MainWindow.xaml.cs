@@ -55,7 +55,6 @@ namespace StatsApp
 
             myComputer.CPUEnabled = true;            
             myComputer.GPUEnabled = true;
-            //myComputer.MainboardEnabled = true;
             myComputer.RAMEnabled = true;
         }
 
@@ -67,59 +66,47 @@ namespace StatsApp
 
             foreach (var hardwareItem in myComputer.Hardware)
             {
-                if (hardwareItem.HardwareType == HardwareType.CPU)
+                hardwareItem.Update();
+                foreach (var subHardware in hardwareItem.SubHardware)
+                    subHardware.Update();
+                switch (hardwareItem.HardwareType)
                 {
-                    hardwareItem.Update();
-
-                    foreach (var subHardware in hardwareItem.SubHardware)
-                        subHardware.Update();
-
-                    foreach (var sensor in hardwareItem.Sensors)
-                    {
-                        if (sensor.SensorType == SensorType.Load)
-                            cpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + Convert.ToInt32(sensor.Value) + "%\n";
-                        if (sensor.SensorType == SensorType.Temperature)
-                            cpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + Convert.ToInt32(sensor.Value) + "°С\n";
-                    }
-                }
-
-                if(hardwareItem.HardwareType == HardwareType.GpuNvidia)
-                {
-                    hardwareItem.Update();
-
-                    foreach (var subHardware in hardwareItem.SubHardware)
-                        subHardware.Update();
-
-                    int loadPercentage = 0;
-                    foreach (var sensor in hardwareItem.Sensors)
-                    {
-                        if (sensor.SensorType == SensorType.Load)
+                    case HardwareType.CPU:
+                        foreach (var sensor in hardwareItem.Sensors)
                         {
-                            if (sensor.Name == "GPU Core")
-                                loadPercentage = Convert.ToInt32(sensor.Value);
-                            gpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + Convert.ToInt32(sensor.Value) + "%\n";
+                            if (sensor.SensorType == SensorType.Load)
+                                cpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + 
+                                    Convert.ToInt32(sensor.Value) + "%\n";
+                            if (sensor.SensorType == SensorType.Temperature)
+                                cpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + 
+                                    Convert.ToInt32(sensor.Value) + "°С\n";
                         }
+                        break;
+                    case HardwareType.GpuNvidia:
+                        int loadPercentage = 0;
+                        foreach (var sensor in hardwareItem.Sensors)
+                        {
+                            if (sensor.SensorType == SensorType.Load)
+                            {
+                                if (sensor.Name == "GPU Core")
+                                    loadPercentage = Convert.ToInt32(sensor.Value);
+                                gpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + 
+                                    Convert.ToInt32(sensor.Value) + "%\n";
+                            }
 
-                        if (sensor.SensorType == SensorType.Temperature)
-                            gpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + Convert.ToInt32(sensor.Value) + "°С\n";
-                    }
-
-                    if (loadPercentage == 0)
-                        gpuTextBlock.Text = " -\n";
-                }
-
-                if (hardwareItem.HardwareType == HardwareType.RAM)
-                {
-                    hardwareItem.Update();
-
-                    foreach (var subHardware in hardwareItem.SubHardware)
-                        subHardware.Update();
-
-                    foreach (var sensor in hardwareItem.Sensors)
-                    {
-                        if(sensor.SensorType == SensorType.Load)
-                            ramTextBlock.Text += " " + Convert.ToInt32(sensor.Value) + "%\n";
-                    }
+                            if (sensor.SensorType == SensorType.Temperature)
+                                gpuTextBlock.Text += sensor.Name.Remove(0, 3) + " " + 
+                                    Convert.ToInt32(sensor.Value) + "°С\n";
+                        }
+                        break;
+                    case HardwareType.GpuAti:
+                            goto case HardwareType.GpuNvidia;
+                    case HardwareType.RAM:
+                        foreach (var sensor in hardwareItem.Sensors)
+                            if (sensor.SensorType == SensorType.Load)
+                                ramTextBlock.Text += " " + 
+                                    Convert.ToInt32(sensor.Value) + "%\n";
+                        break;
                 }
             }
         }
